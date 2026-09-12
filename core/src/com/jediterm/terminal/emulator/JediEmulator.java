@@ -179,6 +179,15 @@ public class JediEmulator extends DataStreamIteratingEmulator {
       case ']': // Operating System Command (OSC)
         processOsc();
         break;
+      case '_': // Application Program Command (APC)
+        // Not implemented, but still parsed as a whole via SystemCommandSequence (rather than
+        // falling through to `unsupported(ch)`, which only consumes the introducer) so its
+        // string content and terminator aren't left on the stream to be misread as terminal
+        // output or further escape sequences — e.g. some shells' predictive/IntelliSense
+        // integrations probe with an APC sequence at startup.
+        SystemCommandSequence apc = new SystemCommandSequence(myDataStream);
+        unsupported("APC" + apc);
+        break;
       case '6':
         unsupported("Back Index (DECBI), VT420 and up");
         break;
@@ -250,6 +259,16 @@ public class JediEmulator extends DataStreamIteratingEmulator {
   }
 
   private boolean deviceControlString(SystemCommandSequence args) {
+    String body = args.getStringAt(0);
+    if (body != null && body.startsWith("+q")) {
+      // XTGETTCAP (Request Termcap/Terminfo String) — e.g. shells probe "Ms" (the termcap
+      // name tied to OSC 52) to detect clipboard support before using it, which isn't
+      // implemented here. Answer with xterm's own "invalid request" reply (DCS 0 + r ST)
+      // instead of staying silent, so a well-behaved prober moves on immediately rather
+      // than only falling back once its own request times out.
+      myTerminal.deviceStatusReport(Ascii.ESC_CHAR + "P0+r" + Ascii.ESC_CHAR + "\\");
+      return true;
+    }
     return false;
   }
 
