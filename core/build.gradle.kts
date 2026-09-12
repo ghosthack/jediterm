@@ -104,5 +104,16 @@ publishing {
         password = System.getenv("INTELLIJ_DEPENDENCIES_TOKEN")
       }
     }
+    // Our fork's own private registry (see https://github.com/ghosthack/jediterm).
+    // `-PforkVersion=...` picks the version published here; run e.g.
+    //   ./gradlew :core:publish -PforkVersion=3.74-ghosthack.1
+    maven {
+      name = "GitHubPackages"
+      url = uri("https://maven.pkg.github.com/ghosthack/jediterm")
+      credentials {
+        username = System.getenv("GITHUB_ACTOR") ?: findProperty("gpr.user") as String?
+        password = System.getenv("GITHUB_TOKEN") ?: findProperty("gpr.token") as String?
+      }
+    }
   }
 }
