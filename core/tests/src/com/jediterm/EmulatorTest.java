@@ -241,6 +241,26 @@ public class EmulatorTest extends EmulatorTestAbstract {
     assertEquals("\u001B[1;1R", response);
   }
 
+  public void testXtgettcapRepliesInvalidInsteadOfHanging() throws IOException {
+    TestSession session = new TestSession(10, 10);
+    // "+q4d73" == XTGETTCAP for "Ms" (the termcap name tied to OSC 52 clipboard support),
+    // which this terminal doesn't implement — a common startup probe from shells/prompts.
+    session.process("P+q4d73\\");
+    assertEquals("P0+r\\", session.getTerminal().getOutputAndClear());
+  }
+
+  public void testApcContentIsConsumedNotPrinted() throws IOException {
+    TestSession session = new TestSession(20, 2);
+    session.process(String.join("", List.of(
+      "foo",
+      "_this is apc content\\",
+      " bar"
+    )));
+    assertScreenLines(session, List.of(
+      "foo bar"
+    ));
+  }
+
   public void testNoScrollWhenOutsideScrollRegion() throws IOException {
     TestSession session = new TestSession(80, 5);
     // Set scrolling region to lines 1-3.
