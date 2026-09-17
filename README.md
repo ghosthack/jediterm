@@ -95,3 +95,42 @@ Licenses
 -------
 JediTerm is dual-licensed under both the LGPLv3 (found in the LICENSE-LGPLv3.txt file in the root directory) and Apache 2.0 License (found in the LICENSE-APACHE-2.0.txt file in the root directory). 
 You may select, at your option, one of the above-listed licenses.
+
+
+This fork
+-------
+This is `github.com/ghosthack/jediterm`, branch `ghosthack/base-3.74`: a private fork consumed
+by a downstream project as `org.jetbrains.jediterm:jediterm-core`, version `3.74-ghosthack.N`,
+published to this fork's own GitHub Packages registry (not Maven Central, not JetBrains'
+`intellij-dependencies`).
+
+### Publishing a new version
+
+1. Make the change under `core/`, add/update a test under `core/tests/`, and commit.
+2. Push the commit to `origin/ghosthack/base-3.74` — GitHub Packages requires the artifact's
+   source to be reachable, and it's just good hygiene to not publish unpushed work.
+3. Publish with a bumped `forkVersion` (`3.74-ghosthack.N` — check the current max with the `gh`
+   command below and increment):
+   ```
+   GITHUB_ACTOR=<user> GITHUB_TOKEN=<token> ./gradlew :core:publishMavenJavaPublicationToGitHubPackagesRepository -PforkVersion=3.74-ghosthack.N
+   ```
+   Credentials: GitHub Packages needs a PAT with `write:packages` for user `ghosthack`. On this
+   machine one already lives in `~/.m2/settings.xml` under server id `github-jediterm-fork`
+   (it's there for the *consumer* side — Maven reads it when a downstream project resolves the
+   dependency — but the same value works here). Ordinary credential hygiene applies: don't
+   print the file's contents or copy the value into a new file on disk; read it straight into
+   the two env vars for the one command that needs them and let it go out of scope after.
+4. **Use `:core:publishMavenJavaPublicationToGitHubPackagesRepository`, not the bare `:core:publish`
+   task.** `publish` also targets the JetBrains `intellij-dependencies` repository declared in
+   `core/build.gradle.kts` (upstream's repo, for `INTELLIJ_DEPENDENCIES_BOT`/`_TOKEN` — creds we
+   don't have and don't want), and that half of the task graph fails even though the GitHub
+   Packages half already succeeded. Targeting the specific task avoids the false failure.
+5. GitHub Packages will not let you overwrite an existing version — republishing the same
+   `forkVersion` fails with `409 Conflict`. That's often a sign the previous attempt actually
+   succeeded (e.g. if it failed later for an unrelated reason, like step 4's false failure).
+   Verify what's actually published before assuming a publish didn't happen:
+   ```
+   gh api /users/ghosthack/packages/maven/org.jetbrains.jediterm.jediterm-core/versions --jq '.[].name'
+   ```
+6. Bump the version in the downstream project's `pom.xml` (`org.jetbrains.jediterm:jediterm-core`)
+   and commit there too.
