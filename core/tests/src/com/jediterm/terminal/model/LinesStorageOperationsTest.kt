@@ -2,6 +2,10 @@ package com.jediterm.terminal.model
 
 import com.jediterm.terminal.TextStyle
 import junit.framework.TestCase
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicReference
 
 class LinesStorageOperationsTest : TestCase() {
   private val lines = listOf(
@@ -397,6 +401,55 @@ class LinesStorageOperationsTest : TestCase() {
        |   Hi!
       """.trimMargin(), storage.getLinesAsString()
     )
+  }
+
+  //--------------- Concurrency ---------------------------------------------------------
+
+  /** Regression test for a real crash: the emulator thread clearing/erasing the buffer
+   * (repeatedly calling `get`, which self-extends the deque with empty lines) racing
+   * against another thread reading a line the same way — e.g. the UI thread's
+   * triple-click-to-select-line, which reads via [LinesStorage.get] without taking
+   * [TerminalTextBuffer]'s own lock. Before [CyclicBufferLinesStorage] synchronized its
+   * own methods, this could corrupt the backing `ArrayDeque` so [get] returned a `null`
+   * line despite its non-null return type, surfacing as a `NullPointerException` far
+   * downstream in `TerminalTextBuffer.clearLines`. */
+  fun `test concurrent get and addToBottom never return a null line`() {
+    val storage = CyclicBufferLinesStorage(-1)
+    val iterations = 20_000
+    val failure = AtomicReference<Throwable>()
+    val start = CountDownLatch(1)
+    val pool = Executors.newFixedThreadPool(2)
+    try {
+      val writer = pool.submit {
+        try {
+          start.await()
+          for (i in 0 until iterations) {
+            storage.addToBottom(terminalLine("w$i"))
+          }
+        } catch (t: Throwable) {
+          failure.compareAndSet(null, t)
+        }
+      }
+      val reader = pool.submit {
+        try {
+          start.await()
+          for (i in 0 until iterations) {
+            val line = storage[i % 50]
+            if (line == null) {
+              failure.compareAndSet(null, AssertionError("storage[${i % 50}] returned null"))
+            }
+          }
+        } catch (t: Throwable) {
+          failure.compareAndSet(null, t)
+        }
+      }
+      start.countDown()
+      writer.get(30, TimeUnit.SECONDS)
+      reader.get(30, TimeUnit.SECONDS)
+    } finally {
+      pool.shutdownNow()
+    }
+    failure.get()?.let { throw it }
   }
 
   private fun createScreenLinesStorage(lines: List<TerminalLine>): LinesStorage {
