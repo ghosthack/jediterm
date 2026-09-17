@@ -261,6 +261,21 @@ public class EmulatorTest extends EmulatorTestAbstract {
     ));
   }
 
+  public void testKittyGraphicsQueryApcIsConsumedNotPrinted() throws IOException {
+    // A Kitty terminal graphics protocol capability probe: its body contains a ';'
+    // separator (control data ';' base64 payload), unlike the plain APC content above
+    // — worth its own case since SystemCommandSequence splits args on ';'.
+    TestSession session = new TestSession(40, 2);
+    session.process(String.join("", List.of(
+      "foo",
+      "_Gi=31337,s=1,v=1,a=q,t=d,f=24;AAAA\\",
+      " bar"
+    )));
+    assertScreenLines(session, List.of(
+      "foo bar"
+    ));
+  }
+
   public void testNoScrollWhenOutsideScrollRegion() throws IOException {
     TestSession session = new TestSession(80, 5);
     // Set scrolling region to lines 1-3.
