@@ -186,7 +186,19 @@ public class JediEmulator extends DataStreamIteratingEmulator {
         // output or further escape sequences — e.g. some shells' predictive/IntelliSense
         // integrations probe with an APC sequence at startup.
         SystemCommandSequence apc = new SystemCommandSequence(myDataStream);
-        unsupported("APC" + apc);
+        if (isKittyGraphicsQuery(apc)) {
+          // Kitty terminal graphics protocol capability probe (`ESC _ G ...`). A terminal
+          // that doesn't implement it is expected to say nothing at all — well-behaved
+          // clients detect "unsupported" by racing this against a reply to an unrelated,
+          // universally-supported query (e.g. Primary Device Attributes) rather than
+          // waiting on a response here. So staying silent is correct protocol behavior,
+          // not something worth a WARN.
+          if (LOG.isDebugEnabled()) {
+            LOG.debug("Unsupported control characters: APC" + apc);
+          }
+        } else {
+          unsupported("APC" + apc);
+        }
         break;
       case '6':
         unsupported("Back Index (DECBI), VT420 and up");
@@ -418,6 +430,15 @@ public class JediEmulator extends DataStreamIteratingEmulator {
       case '@':
         unsupported(ch, secondCh);
     }
+  }
+
+  /** The Kitty graphics protocol's APC body always starts with a literal {@code G}
+   * immediately followed by its comma-separated key=value control data (e.g.
+   * {@code Gi=1,s=1,v=1,a=q,t=d,f=24;<payload>}) — see
+   * <a href="https://sw.kovidgoyal.net/kitty/graphics-protocol/">the spec</a>. */
+  private static boolean isKittyGraphicsQuery(SystemCommandSequence apc) {
+    String body = apc.getStringAt(0);
+    return body != null && body.startsWith("G");
   }
 
   /**
