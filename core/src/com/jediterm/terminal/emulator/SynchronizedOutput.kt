@@ -26,6 +26,15 @@ internal class SynchronizedOutput(
         val ch = dataStream.getChar()
         addChar(ch)
       }
+      catch (e: TerminalDataStream.EOF) {
+        // Routine: the process exited while a `?2026h`...`?2026l` bracket was still open
+        // (e.g. the shell was closed mid-update) — not a fault worth a stack trace, just
+        // like the identical case `applySyncOutput` below already treats as expected.
+        if (LOG.isDebugEnabled()) {
+          LOG.debug("Aborting synchronized output: stream ended")
+        }
+        end()
+      }
       catch (e: IOException) {
         LOG.info("Aborting synchronized output", e)
         end()
