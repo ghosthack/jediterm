@@ -813,6 +813,10 @@ public class JediEmulator extends DataStreamIteratingEmulator {
         myTerminal.deviceStatusReport(str);
         return true;
       }
+      if (decCode == 6) { // DECXCPR: extended cursor position report
+        reportCursorPosition(true);
+        return true;
+      }
       LOG.warn("Don't support DEC-specific Device Report Status: " + args.getDebugInfo());
       return false;
     }
@@ -823,22 +827,27 @@ public class JediEmulator extends DataStreamIteratingEmulator {
       myTerminal.deviceStatusReport(str);
       return true;
     } else if (c == 6) {
-      int row = myTerminal.getCursorY();
-      int column = myTerminal.getCursorX();
-
-      if (myTerminal instanceof JediTerminal && ((JediTerminal) myTerminal).isOriginMode()) {
-        row -= (((JediTerminal) myTerminal).getScrollRegionTop() - 1);
-      }
-
-      String str = "\033[" + row + ";" + column + "R";
-
-      LOG.debug("Sending Device Report Status : " + str);
-      myTerminal.deviceStatusReport(str);
+      reportCursorPosition(false);
       return true;
     } else {
       LOG.warn("Sending Device Report Status : unsupported parameter: " + args);
       return false;
     }
+  }
+
+  private void reportCursorPosition(boolean extended) {
+    int row = myTerminal.getCursorY();
+    int column = myTerminal.getCursorX();
+
+    if (myTerminal instanceof JediTerminal && ((JediTerminal) myTerminal).isOriginMode()) {
+      row -= (((JediTerminal) myTerminal).getScrollRegionTop() - 1);
+    }
+
+    // DECXCPR (CSI ?6n) replies with a page number; JediTerm has no page concept, so it's always 1.
+    String str = extended ? "\033[?" + row + ";" + column + ";1R" : "\033[" + row + ";" + column + "R";
+
+    LOG.debug("Sending Device Report Status : " + str);
+    myTerminal.deviceStatusReport(str);
   }
 
   private boolean cursorShape(ControlSequence args) {

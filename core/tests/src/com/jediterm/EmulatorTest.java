@@ -241,6 +241,15 @@ public class EmulatorTest extends EmulatorTestAbstract {
     assertEquals("\u001B[1;1R", response);
   }
 
+  public void testExtendedDeviceStatusReport() throws IOException {
+    TestSession session = new TestSession(80, 24);
+    session.process("[3;4H");
+    // Request Extended Cursor Position (DECXCPR).
+    session.process("[?6n");
+    String response = session.getTerminal().getOutputAndClear();
+    assertEquals("[?3;4;1R", response);
+  }
+
   public void testXtgettcapRepliesInvalidInsteadOfHanging() throws IOException {
     TestSession session = new TestSession(10, 10);
     // "+q4d73" == XTGETTCAP for "Ms" (the termcap name tied to OSC 52 clipboard support),
