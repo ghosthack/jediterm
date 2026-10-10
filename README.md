@@ -137,4 +137,5 @@ by downstream projects as `org.jetbrains.jediterm:jediterm-core` and `jediterm-u
    gh api /users/ghosthack/packages/maven/org.jetbrains.jediterm.jediterm-ui/versions --jq '.[].name'
    ```
 6. Bump the version in each downstream project's `pom.xml` and commit there too: harness-manager
-   uses `jediterm-core` and `jediterm-ui`, jmux uses `jediterm-core` only.
+   sets it once in its `jediterm.version` property (for core and ui), jmux on its
+   `jediterm-core` dependency.
