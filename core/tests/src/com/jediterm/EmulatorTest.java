@@ -11,6 +11,9 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.Assert;
 
 import java.io.IOException;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -256,6 +259,23 @@ public class EmulatorTest extends EmulatorTestAbstract {
     // which this terminal doesn't implement — a common startup probe from shells/prompts.
     session.process("P+q4d73\\");
     assertEquals("P0+r\\", session.getTerminal().getOutputAndClear());
+  }
+
+  public void testVimDcsProbeIsConsumedWithoutReply() throws IOException {
+    TestSession session = new TestSession(20, 2);
+    // Vim's xterm compatibility probe must not print its payload or move the cursor.
+    ByteArrayOutputStream log = new ByteArrayOutputStream();
+    PrintStream previousErr = System.err;
+    try (PrintStream capturedErr = new PrintStream(log, true, StandardCharsets.UTF_8.name())) {
+      System.setErr(capturedErr);
+      session.process("before\u001bPzz\u001b\\after\u001b[6n");
+    } finally {
+      System.setErr(previousErr);
+    }
+    assertScreenLines(session, List.of("beforeafter"));
+    assertEquals("\u001b[1;12R", session.getTerminal().getOutputAndClear());
+    String capturedLog = log.toString(StandardCharsets.UTF_8.name());
+    assertFalse(capturedLog, capturedLog.contains("WARN"));
   }
 
   public void testApcContentIsConsumedNotPrinted() throws IOException {
