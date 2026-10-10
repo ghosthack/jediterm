@@ -100,19 +100,22 @@ You may select, at your option, one of the above-listed licenses.
 This fork
 -------
 This is `github.com/ghosthack/jediterm`, branch `ghosthack/base-3.76`: a private fork consumed
-by a downstream project as `org.jetbrains.jediterm:jediterm-core`, version `3.76-ghosthack.N`,
-published to this fork's own GitHub Packages registry (not Maven Central, not JetBrains'
+by downstream projects as `org.jetbrains.jediterm:jediterm-core` and `jediterm-ui`, version
+`3.76-ghosthack.N`, published to this fork's own GitHub Packages registry (not Maven Central, not JetBrains'
 `intellij-dependencies`).
 
 ### Publishing a new version
 
-1. Make the change under `core/`, add/update a test under `core/tests/`, and commit.
+1. Make the change under `core/` or `ui/`, add/update a test under `core/tests/` or `ui/tests/`,
+   and commit.
 2. Push the commit to `origin/ghosthack/base-3.76` — GitHub Packages requires the artifact's
    source to be reachable, and it's just good hygiene to not publish unpushed work.
-3. Publish with a bumped `forkVersion` (`3.76-ghosthack.N` — check the current max with the `gh`
-   command below and increment):
+3. Publish **both** modules with the same bumped `forkVersion` (`3.76-ghosthack.N` — check the
+   current max with the `gh` command below and increment). Always publish both, even if only one
+   changed: consumers pin core and ui to the same version, and a version that exists for only
+   one of them breaks their build.
    ```
-   GITHUB_ACTOR=<user> GITHUB_TOKEN=<token> ./gradlew :core:publishMavenJavaPublicationToGitHubPackagesRepository -PforkVersion=3.76-ghosthack.N
+   GITHUB_ACTOR=<user> GITHUB_TOKEN=<token> ./gradlew :core:publishMavenJavaPublicationToGitHubPackagesRepository :ui:publishMavenJavaPublicationToGitHubPackagesRepository -PforkVersion=3.76-ghosthack.N
    ```
    Credentials: GitHub Packages needs a PAT with `write:packages` for user `ghosthack`. On this
    machine one already lives in `~/.m2/settings.xml` under server id `github-jediterm-fork`
@@ -120,9 +123,9 @@ published to this fork's own GitHub Packages registry (not Maven Central, not Je
    dependency — but the same value works here). Ordinary credential hygiene applies: don't
    print the file's contents or copy the value into a new file on disk; read it straight into
    the two env vars for the one command that needs them and let it go out of scope after.
-4. **Use `:core:publishMavenJavaPublicationToGitHubPackagesRepository`, not the bare `:core:publish`
+4. **Use the `publishMavenJavaPublicationToGitHubPackagesRepository` tasks, not the bare `publish`
    task.** `publish` also targets the JetBrains `intellij-dependencies` repository declared in
-   `core/build.gradle.kts` (upstream's repo, for `INTELLIJ_DEPENDENCIES_BOT`/`_TOKEN` — creds we
+   `core/build.gradle.kts` and `ui/build.gradle.kts` (upstream's repo, for `INTELLIJ_DEPENDENCIES_BOT`/`_TOKEN` — creds we
    don't have and don't want), and that half of the task graph fails even though the GitHub
    Packages half already succeeded. Targeting the specific task avoids the false failure.
 5. GitHub Packages will not let you overwrite an existing version — republishing the same
@@ -131,6 +134,7 @@ published to this fork's own GitHub Packages registry (not Maven Central, not Je
    Verify what's actually published before assuming a publish didn't happen:
    ```
    gh api /users/ghosthack/packages/maven/org.jetbrains.jediterm.jediterm-core/versions --jq '.[].name'
+   gh api /users/ghosthack/packages/maven/org.jetbrains.jediterm.jediterm-ui/versions --jq '.[].name'
    ```
-6. Bump the version in the downstream project's `pom.xml` (`org.jetbrains.jediterm:jediterm-core`)
-   and commit there too.
+6. Bump the version in each downstream project's `pom.xml` and commit there too: harness-manager
+   uses `jediterm-core` and `jediterm-ui`, jmux uses `jediterm-core` only.
