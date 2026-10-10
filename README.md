@@ -99,20 +99,20 @@ You may select, at your option, one of the above-listed licenses.
 
 This fork
 -------
-This is `github.com/ghosthack/jediterm`, branch `ghosthack/base-3.74`: a private fork consumed
-by a downstream project as `org.jetbrains.jediterm:jediterm-core`, version `3.74-ghosthack.N`,
+This is `github.com/ghosthack/jediterm`, branch `ghosthack/base-3.76`: a private fork consumed
+by a downstream project as `org.jetbrains.jediterm:jediterm-core`, version `3.76-ghosthack.N`,
 published to this fork's own GitHub Packages registry (not Maven Central, not JetBrains'
 `intellij-dependencies`).
 
 ### Publishing a new version
 
 1. Make the change under `core/`, add/update a test under `core/tests/`, and commit.
-2. Push the commit to `origin/ghosthack/base-3.74` — GitHub Packages requires the artifact's
+2. Push the commit to `origin/ghosthack/base-3.76` — GitHub Packages requires the artifact's
    source to be reachable, and it's just good hygiene to not publish unpushed work.
-3. Publish with a bumped `forkVersion` (`3.74-ghosthack.N` — check the current max with the `gh`
+3. Publish with a bumped `forkVersion` (`3.76-ghosthack.N` — check the current max with the `gh`
    command below and increment):
    ```
-   GITHUB_ACTOR=<user> GITHUB_TOKEN=<token> ./gradlew :core:publishMavenJavaPublicationToGitHubPackagesRepository -PforkVersion=3.74-ghosthack.N
+   GITHUB_ACTOR=<user> GITHUB_TOKEN=<token> ./gradlew :core:publishMavenJavaPublicationToGitHubPackagesRepository -PforkVersion=3.76-ghosthack.N
    ```
    Credentials: GitHub Packages needs a PAT with `write:packages` for user `ghosthack`. On this
    machine one already lives in `~/.m2/settings.xml` under server id `github-jediterm-fork`

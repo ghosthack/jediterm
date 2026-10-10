@@ -106,7 +106,7 @@ publishing {
     }
     // Our fork's own private registry (see https://github.com/ghosthack/jediterm).
     // `-PforkVersion=...` picks the version published here; run e.g.
-    //   ./gradlew :core:publish -PforkVersion=3.74-ghosthack.1
+    //   ./gradlew :core:publishMavenJavaPublicationToGitHubPackagesRepository -PforkVersion=3.76-ghosthack.1
     maven {
       name = "GitHubPackages"
       url = uri("https://maven.pkg.github.com/ghosthack/jediterm")
