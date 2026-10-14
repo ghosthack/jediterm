@@ -7,7 +7,7 @@ not the retired oss.sonatype.org service.
 
 ## Local validation
 
-Run with JDK 17 or newer. Gradle compiles both libraries for Java 11.
+Run with JDK 21 or newer; the upstream test fixtures use Java 21 APIs. Gradle compiles both libraries for Java 11.
 
 ```sh
 ./gradlew :core:test :ui:test \
