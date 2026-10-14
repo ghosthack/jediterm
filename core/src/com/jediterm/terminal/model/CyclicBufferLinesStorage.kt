@@ -1,3 +1,4 @@
+// Modified by ghosthack. Fork changes are licensed under Apache-2.0; see NOTICE.
 package com.jediterm.terminal.model
 
 /**

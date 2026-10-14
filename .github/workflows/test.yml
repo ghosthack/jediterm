@@ -1,3 +1,4 @@
+# Modified by ghosthack. Fork changes are licensed under Apache-2.0; see NOTICE.
 name: Java CI
 
 on: [push, pull_request]
@@ -21,6 +22,10 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.x"
+
       - name: Grant execute permission for Gradle wrapper
         if: runner.os != 'Windows'
         run: chmod +x ./gradlew
@@ -28,5 +33,12 @@ jobs:
       - name: Validate Gradle wrapper
         uses: gradle/wrapper-validation-action@v2
 
-      - name: Run tests
-        run: ./gradlew test --no-daemon --stacktrace
+      - name: Test and validate both Maven publications
+        shell: bash
+        run: |
+          ./gradlew test \
+            :core:publishMavenJavaPublicationToLocalReleaseRepository \
+            :ui:publishMavenJavaPublicationToLocalReleaseRepository \
+            -PpublicationGroup=io.github.ghosthack -PforkVersion=3.76-ghosthack.2 \
+            --no-daemon --stacktrace
+          python3 scripts/verify-release.py 3.76-ghosthack.2

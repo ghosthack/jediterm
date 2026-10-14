@@ -1,0 +1,11 @@
+JediTerm ghosthack fork licensing
+
+Upstream JediTerm is dual-licensed under LGPLv3 and Apache License 2.0.
+This fork distributes the core and UI modules under the Apache 2.0 option.
+See LICENSE-APACHE-2.0.txt for the complete license terms. The upstream
+LGPLv3 license text is also retained in LICENSE-LGPLv3.txt.
+
+Copyright 2026 ghosthack for fork modifications.
+Fork modifications are licensed under the Apache License, Version 2.0.
+All existing upstream copyright and attribution notices remain in force.
+See NOTICE for project origins and fork modification details.

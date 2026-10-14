@@ -1,3 +1,4 @@
+// Modified by ghosthack. Fork changes are licensed under Apache-2.0; see NOTICE.
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -21,6 +22,7 @@ sourceSets {
 
 java {
   withSourcesJar()
+  withJavadocJar()
 }
 
 dependencies {
@@ -81,17 +83,18 @@ publishing {
       pom {
         name = "JediTerm"
         description = "Pure Java Terminal Emulator"
-        url = "https://github.com/JetBrains/jediterm"
+        url = "https://github.com/ghosthack/jediterm"
         licenses {
           license {
-            name = "LGPL 3.0"
-            url = "https://www.gnu.org/licenses/lgpl.txt"
+            name = "Apache License, Version 2.0"
+            url = "https://www.apache.org/licenses/LICENSE-2.0.txt"
+            distribution = "repo"
           }
         }
         scm {
-          connection = "scm:git:git://github.com/JetBrains/jediterm.git"
-          developerConnection = "scm:git:ssh:github.com/JetBrains/jediterm.git"
-          url = "https://github.com/JetBrains/jediterm"
+          connection = "scm:git:https://github.com/ghosthack/jediterm.git"
+          developerConnection = "scm:git:ssh://git@github.com/ghosthack/jediterm.git"
+          url = "https://github.com/ghosthack/jediterm"
         }
       }
     }
@@ -104,7 +107,7 @@ publishing {
         password = System.getenv("INTELLIJ_DEPENDENCIES_TOKEN")
       }
     }
-    // Our fork's own private registry (see https://github.com/ghosthack/jediterm).
+    // Legacy GitHub Packages registry (see https://github.com/ghosthack/jediterm).
     // `-PforkVersion=...` picks the version published here; run e.g.
     //   ./gradlew :core:publishMavenJavaPublicationToGitHubPackagesRepository -PforkVersion=3.76-ghosthack.1
     maven {
@@ -116,4 +119,11 @@ publishing {
       }
     }
   }
+}
+
+// Java API documentation also resolves the Kotlin classes compiled in this module.
+tasks.javadoc {
+  dependsOn(tasks.classes)
+  classpath += sourceSets.main.get().output
+  (options as StandardJavadocDocletOptions).addStringOption("Xdoclint:none", "-quiet")
 }

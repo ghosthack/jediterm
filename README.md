@@ -99,43 +99,16 @@ You may select, at your option, one of the above-listed licenses.
 
 This fork
 -------
-This is `github.com/ghosthack/jediterm`, branch `ghosthack/base-3.76`: a private fork consumed
-by downstream projects as `org.jetbrains.jediterm:jediterm-core` and `jediterm-ui`, version
-`3.76-ghosthack.N`, published to this fork's own GitHub Packages registry (not Maven Central, not JetBrains'
-`intellij-dependencies`).
+This public fork provides terminal behavior fixes used by harness-manager and jmux.
+It retains upstream's licensing notices and uses the Apache 2.0 licensing option;
+fork modifications are also Apache 2.0 licensed. See [LICENSE](LICENSE) and [NOTICE](NOTICE).
 
-### Publishing a new version
+Both modules are released together on Maven Central under our own namespace:
 
-1. Make the change under `core/` or `ui/`, add/update a test under `core/tests/` or `ui/tests/`,
-   and commit.
-2. Push the commit to `origin/ghosthack/base-3.76` — GitHub Packages requires the artifact's
-   source to be reachable, and it's just good hygiene to not publish unpushed work.
-3. Publish **both** modules with the same bumped `forkVersion` (`3.76-ghosthack.N` — check the
-   current max with the `gh` command below and increment). Always publish both, even if only one
-   changed: consumers pin core and ui to the same version, and a version that exists for only
-   one of them breaks their build.
-   ```
-   GITHUB_ACTOR=<user> GITHUB_TOKEN=<token> ./gradlew :core:publishMavenJavaPublicationToGitHubPackagesRepository :ui:publishMavenJavaPublicationToGitHubPackagesRepository -PforkVersion=3.76-ghosthack.N
-   ```
-   Credentials: GitHub Packages needs a PAT with `write:packages` for user `ghosthack`. On this
-   machine one already lives in `~/.m2/settings.xml` under server id `github-jediterm-fork`
-   (it's there for the *consumer* side — Maven reads it when a downstream project resolves the
-   dependency — but the same value works here). Ordinary credential hygiene applies: don't
-   print the file's contents or copy the value into a new file on disk; read it straight into
-   the two env vars for the one command that needs them and let it go out of scope after.
-4. **Use the `publishMavenJavaPublicationToGitHubPackagesRepository` tasks, not the bare `publish`
-   task.** `publish` also targets the JetBrains `intellij-dependencies` repository declared in
-   `core/build.gradle.kts` and `ui/build.gradle.kts` (upstream's repo, for `INTELLIJ_DEPENDENCIES_BOT`/`_TOKEN` — creds we
-   don't have and don't want), and that half of the task graph fails even though the GitHub
-   Packages half already succeeded. Targeting the specific task avoids the false failure.
-5. GitHub Packages will not let you overwrite an existing version — republishing the same
-   `forkVersion` fails with `409 Conflict`. That's often a sign the previous attempt actually
-   succeeded (e.g. if it failed later for an unrelated reason, like step 4's false failure).
-   Verify what's actually published before assuming a publish didn't happen:
-   ```
-   gh api /users/ghosthack/packages/maven/org.jetbrains.jediterm.jediterm-core/versions --jq '.[].name'
-   gh api /users/ghosthack/packages/maven/org.jetbrains.jediterm.jediterm-ui/versions --jq '.[].name'
-   ```
-6. Bump the version in each downstream project's `pom.xml` and commit there too: harness-manager
-   sets it once in its `jediterm.version` property (for core and ui), jmux on its
-   `jediterm-core` dependency.
+* `io.github.ghosthack:jediterm-core:3.76-ghosthack.2`
+* `io.github.ghosthack:jediterm-ui:3.76-ghosthack.2`
+
+Java package names remain `com.jediterm`. Legacy GitHub Packages artifacts
+under `org.jetbrains.jediterm` remain separate from these Central releases.
+
+See [PUBLISHING.md](PUBLISHING.md) for local validation and GitHub release publishing.
