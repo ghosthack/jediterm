@@ -35,7 +35,7 @@ the same in-memory signing used in CI. Never print or commit those values.
 4. Confirm both module versions resolve anonymously from Maven Central.
 
 The workflow uses these repository secrets, installed by the existing
-`gpg-backup-audit/set-maven-central-secrets.sh` helper:
+`signing-secrets/set-maven-central-secrets.sh` helper:
 `MAVEN_CENTRAL_USERNAME`, `MAVEN_CENTRAL_PASSWORD`, `GPG_PRIVATE_KEY`,
 and `GPG_PASSPHRASE`. It publishes only the `io.github.ghosthack` namespace.
 
